@@ -1,6 +1,6 @@
 import { t, getLocale } from "./i18n.js";
 import { localDate, sortTasks, dueCue } from "./task-utils.js";
-import { nextStepIndex, planStatus } from "./plans.js";
+import { nextStepIndex, planStatus, nextUsefulAction } from "./plans.js";
 export function el(tag, text, cls) {
   const n = document.createElement(tag);
   if (text !== undefined) n.textContent = text;
@@ -32,7 +32,17 @@ export function formatDate(date) {
 export function renderPlan(
   root,
   plan,
-  { saved, onSave, onGuide, onChange, onClarify, canClarify, onCopy },
+  {
+    saved,
+    onSave,
+    onGuide,
+    onChange,
+    onClarify,
+    canClarify,
+    onCopy,
+    clarification = "",
+    onClarificationChange,
+  },
 ) {
   root.replaceChildren();
   root.append(el("p", plan.summary, "explanation"));
@@ -126,6 +136,10 @@ export function renderPlan(
       input.id = "clarification";
       input.maxLength = 800;
       input.rows = 2;
+      input.value = clarification;
+      input.addEventListener("input", () =>
+        onClarificationChange?.(input.value),
+      );
       const submit = el("button", t("recheck"));
       submit.type = "submit";
       form.append(
@@ -236,9 +250,7 @@ export function renderDay({
   const pending = [
     ...plans.flatMap((p) => p.steps.map((s) => ({ ...s, title: s.text }))),
     ...tasks,
-  ]
-    .filter((s) => !s.done)
-    .sort((a, b) => (a.due || "9999").localeCompare(b.due || "9999"));
+  ].filter((s) => !s.done);
   const today = localDate();
   const cues = pending.map((step) => dueCue(step, today));
   document.querySelector("#day-counts").textContent = t("day_counts", {
@@ -246,8 +258,9 @@ export function renderDay({
     today: cues.filter((key) => key === "due_today").length,
     upcoming: cues.filter((key) => key === "upcoming").length,
   });
-  document.querySelector("#next-action").textContent = pending.length
-    ? t("next_action", { text: pending[0].title })
+  const next = nextUsefulAction(plans, tasks);
+  document.querySelector("#next-action").textContent = next
+    ? t("next_action", { text: next.title })
     : t(plans.length || tasks.length ? "day_complete" : "day_empty");
   document.querySelector("#today").textContent = formatDate(today);
 }

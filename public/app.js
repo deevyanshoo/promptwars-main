@@ -26,6 +26,7 @@ const store = createPlanStore(storage);
 let photo = null,
   activePlan = null,
   activeSource = null,
+  clarificationDraft = null,
   failedPlanRequest = null,
   execution = null,
   guideIndex = null,
@@ -95,6 +96,7 @@ document.addEventListener("visibilitychange", () => {
 });
 // Photo identity and draft identity must move together. Saved plans are untouched.
 function clearCurrentDraft() {
+  clarificationDraft = null;
   activePlan = null;
   activeSource = null;
   guideIndex = null;
@@ -123,6 +125,10 @@ function invalidatePhotoReview() {
 }
 function inputChanged(edited = true) {
   if (edited) clearPlanRetry();
+  if (edited && $("message").value !== activeSource) {
+    clarificationDraft = null;
+    if ($("clarification")) $("clarification").value = "";
+  }
   $("character-count").textContent =
     `${$("message").value.length.toLocaleString(getLocale())} / 4,000`;
   if (reviewRequired && edited) $("review-confirm").checked = false;
@@ -241,6 +247,7 @@ function changeStep(id, patch) {
 }
 function renderCurrent() {
   if (!activePlan) return;
+  const owner = { planId: activePlan.id, source: activeSource };
   $("result").hidden = false;
   $("plan-overview").hidden = guideIndex !== null;
   $("guide").hidden = guideIndex === null;
@@ -266,7 +273,27 @@ function renderCurrent() {
     },
     onChange: changeStep,
     canClarify: !!activeSource,
-    onClarify: (clarification) => planMessage(clarification),
+    clarification:
+      clarificationDraft?.planId === owner.planId &&
+      clarificationDraft.source === owner.source
+        ? clarificationDraft.value
+        : "",
+    onClarificationChange: (value) => {
+      clarificationDraft = { ...owner, value };
+    },
+    onClarify: (clarification) => {
+      if (
+        !activeSource ||
+        activePlan?.id !== owner.planId ||
+        activeSource !== owner.source ||
+        $("message").value !== activeSource
+      ) {
+        status("plan-status", "source_changed");
+        $("message").focus();
+        return;
+      }
+      planMessage(clarification);
+    },
     onCopy: async () => {
       try {
         await navigator.clipboard.writeText($("share-summary").value);
@@ -298,6 +325,7 @@ function renderCurrent() {
 }
 function resume(id) {
   voice.stopAll();
+  clarificationDraft = null;
   activePlan = store.state.plans.find((p) => p.id === id);
   activeSource = null;
   guideIndex = activePlan.steps.length
@@ -549,6 +577,7 @@ $("cancel-clear").onclick = () => {
 };
 $("confirm-clear").onclick = () => {
   if (store.clear()) {
+    clarificationDraft = null;
     activePlan = null;
     activeSource = null;
     guideIndex = null;

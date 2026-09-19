@@ -11,6 +11,7 @@ import {
   makePlan,
   completeStep,
   nextStepIndex,
+  nextUsefulAction,
   planStatus,
   STORAGE_KEY,
 } from "../public/plans.js";
@@ -119,6 +120,34 @@ const memory = () => {
     removeItem: (k) => m.delete(k),
   };
 };
+test("next useful action respects plan order while ranking eligible plans and manual tasks", () => {
+  const p = makePlan(response, "hi");
+  p.steps[1].due = "2000-01-01";
+  assert.equal(nextUsefulAction([p], []).id, p.steps[0].id);
+  const advanced = completeStep(p, p.steps[0].id, true);
+  assert.equal(nextUsefulAction([advanced], []).id, p.steps[1].id);
+  const q = makePlan(response, "en");
+  q.steps[0].due = "2026-09-19";
+  assert.equal(nextUsefulAction([p, q], []).id, q.steps[0].id);
+  const manual = {
+    id: "manual",
+    title: "Manual task",
+    due: "2026-09-18",
+    done: false,
+    created: 1,
+  };
+  assert.equal(nextUsefulAction([p, q], [manual]).id, "manual");
+  assert.equal(
+    nextUsefulAction([p, q], [{ ...manual, done: true }]).id,
+    q.steps[0].id,
+  );
+  assert.equal(
+    nextUsefulAction([completeStep(advanced, p.steps[1].id, true)], []),
+    null,
+  );
+  assert.equal(nextUsefulAction([], []), null);
+  assert.equal(p.steps[0].done, false);
+});
 test("explicit save, completion, undo, dates and reload preserve plan content", () => {
   const storage = memory(),
     store = createPlanStore(storage);

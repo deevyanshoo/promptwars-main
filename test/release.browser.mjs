@@ -385,6 +385,69 @@ try {
   console.log(
     "PASS: production date cues retain Hindi/English translations and completion/undo survives saved-plan reload",
   );
+
+  await prepareA();
+  await page.locator("#clarification").fill("Unsent answer for source A");
+  await page.locator("#text-toggle").click();
+  assert.equal(
+    await page.locator("#clarification").inputValue(),
+    "Unsent answer for source A",
+  );
+  await page.locator("#language-hi").click();
+  assert.equal(
+    await page.locator("#clarification").inputValue(),
+    "Unsent answer for source A",
+  );
+  await page.locator("#language-en").click();
+  await page.locator("#message").fill("Source B requires a new plan");
+  assert.equal(await page.locator("#clarification").inputValue(), "");
+  await page.locator("#clarification").fill("Answer to old A questions");
+  const beforeWrongOwner = planRequests.length;
+  await page.locator("#plan-overview form button").click();
+  assert.equal(planRequests.length, beforeWrongOwner);
+  assert.equal(await page.evaluate(() => document.activeElement.id), "message");
+  assert.match(await page.locator("#plan-status").innerText(), /changed/i);
+  await page.locator("#review-confirm").check();
+  await page.locator("#understand-button").click();
+  await page.locator("#result").waitFor({ state: "visible" });
+  assert.equal(await page.locator("#clarification").inputValue(), "");
+  assert.deepEqual(planRequests.at(-1), {
+    message: "Source B requires a new plan",
+    locale: "en",
+    clarification: "",
+  });
+  console.log(
+    "PASS: clarification draft survives presentation renders, refuses a changed source and clears on explicit new-plan generation",
+  );
+
+  await page.evaluate(() => {
+    const state = JSON.parse(localStorage.getItem("daywell.main.v2"));
+    const p = state.plans[0];
+    p.steps = [
+      { id: "first", text: "Confirm clinic location", done: false, due: "" },
+      { id: "later", text: "Travel to clinic", done: false, due: "2000-01-01" },
+    ];
+    state.plans = [p];
+    state.tasks = [];
+    localStorage.setItem("daywell.main.v2", JSON.stringify(state));
+  });
+  await page.reload();
+  assert.match(
+    await page.locator("#next-action").innerText(),
+    /Confirm clinic location/,
+  );
+  assert.match(await page.locator("#day-counts").innerText(), /1 overdue/);
+  await page.getByRole("button", { name: "Resume plan", exact: true }).click();
+  await page
+    .getByRole("button", { name: "I have done this", exact: true })
+    .click();
+  assert.match(
+    await page.locator("#next-action").innerText(),
+    /Travel to clinic/,
+  );
+  console.log(
+    "PASS: next action keeps prerequisites while all pending steps still contribute to date counts",
+  );
 } finally {
   await browser.close();
 }

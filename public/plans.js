@@ -1,4 +1,10 @@
-import { validDate, validTask, localDate, dueCue } from "./task-utils.js";
+import {
+  validDate,
+  validTask,
+  localDate,
+  dueCue,
+  sortTasks,
+} from "./task-utils.js";
 export const STORAGE_KEY = "daywell.main.v2";
 const id = () => globalThis.crypto.randomUUID();
 const text = (v, max) =>
@@ -56,6 +62,15 @@ export function completeStep(plan, stepId, done) {
 }
 export function nextStepIndex(plan) {
   return plan.steps.findIndex((s) => !s.done);
+}
+export function nextUsefulAction(plans, tasks) {
+  const candidates = plans.flatMap((plan) => {
+    const step = plan.steps.find((s) => !s.done);
+    return step ? [{ ...step, title: step.text, created: plan.created }] : [];
+  });
+  return (
+    sortTasks([...candidates, ...tasks.filter((task) => !task.done)])[0] || null
+  );
 }
 export function planStatus(plan, today = localDate()) {
   const pending = plan.steps.filter((s) => !s.done);
