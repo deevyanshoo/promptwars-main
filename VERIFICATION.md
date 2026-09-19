@@ -78,3 +78,31 @@ A fresh account-free Chrome context recorded real public Gemini calls using exac
 Artifact outside Git: `/private/tmp/daywell-main-evidence/daywell-demo-pack-final-7775866.mp4`, 119 seconds, 1280x720 H.264 with AAC English narration, 3,172,277 bytes. Narration was generated with local macOS Samantha speech synthesis and muxed before upload. Segment durations were measured and checked for overlap. Selected encoded frames were inspected, and the audio stream contains nonzero samples; this is not a claim of human listening-quality review. Scene timestamps and raw recording are preserved beside the MP4. Both synthetic input photos were generated with OpenAI image generation outside the application, separately from Codex development assistance and runtime Gemini.
 
 YouTube Studio confirmed publication as Unlisted with no copyright issues reported: https://youtu.be/eXG8rFQDzvY. The signed-out browser loaded the titled video and 1:59 player. Publication completed shortly after the 1:20 PM target. The event form was not submitted.
+
+## Local quality candidate, 19 September 2026 before 2:00 PM IST
+
+Uncommitted and not deployed. `npm test`: **35 passed, 0 failed**. The focused Chrome runner against `http://127.0.0.1:8085` passed **10 browser regression groups**, with API responses mocked and speech callbacks controlled. The temporary server binds loopback only and rejects provider invocations. No new live Gemini, microphone or public-browser claim is made for this candidate.
+
+New coverage verifies retired speech callbacks, exact reviewed payload and clarification across retries, review confirmation on retry, source/language invalidation, immutable completion, plan-status precedence, and production Hindi/English due cues with completion/undo after saved-plan reload. The HTTP admission test waits for both workflows to enter before checking rejection. Earlier release counts above are historical, not the candidate count.
+
+### Frozen rollback state, read only
+
+- Git commit: `dfec44846dbac18ccf26f8906a06d517b0b2e4ae`, retained as HEAD while reviewing the uncommitted candidate.
+- Project/region/service: `promptwars-divyanshu-260919` / `asia-south1` / `promptwars-main`.
+- Ready revision and current 100% traffic target: `promptwars-main-00005-2gt`.
+- Runtime APP_COMMIT: `dfec44846dbac18ccf26f8906a06d517b0b2e4ae`.
+- Image: `asia-south1-docker.pkg.dev/promptwars-divyanshu-260919/cloud-run-source-deploy/promptwars-main@sha256:9d3b88af4eeb50d97698f3e9ae6ea3716c9edd24445d7a73ac2163f53aa3accf`.
+
+No push, build, deployment, publication, traffic change or live restart occurred during candidate preparation. The earlier freeze occurred after user submission. The corrected portal attempt history is recorded below. No score improvement is claimed.
+
+### Demo provenance and next-release verification boundary
+
+Automated-test images are drawn programmatically. The actual video instead uses OpenAI-generated `01-community-notice-en.png` and `03-suspicious-payment.png`; its link and recorded commit `7775866` are unchanged. The quality changes preserve the demonstrated successful workflow, while fixing retry/session edge cases. Local controlled-response regressions passed, but a new deployed-release real-Gemini demo-path check remains pending authorization to deploy. That check must cover both actual photos, editable review, Hindi planning, guided completion, explicit save/reload/resume and safe fraud steps, plus the deployed health commit.
+
+Admission-test follow-up: the test has a 5,000 ms timeout and cleanup that releases its gate and closes local sockets. An external temporary copy with a deliberately unreachable entry barrier exited nonzero in about 5.5 seconds with the expected timeout and no unhandled rejections. The unmodified admission/HTTP suite passed 4/4 afterward. All dueCue callers and assertions use translation keys; the tenth browser group directly verifies date updates, translated cues, completion, reload and undo. No application source changed after the 2:00 PM cutoff.
+
+## Release authorization and corrected attempt history
+
+At approximately 2:03 PM IST, the orchestrator approved this bounded release for commit on main, push and deployment after reviewing the production diff and tests. Portal history verified by the orchestrator: Attempt 1 was AGENT_FAILED; Attempt 2 scored 94.05, rank 1/79; 2/3 attempts are used. The user states the latest score counts. This release is compared with the previous scored submission. The event form remains user-owned and no score improvement is promised.
+
+Predeployment checks: 35/35 Node tests, 10/10 local controlled-response browser groups, formatting and diff checks passed. Rollback commit dfec448 and revision promptwars-main-00005-2gt remain available. Anonymous health, the ten public controlled-response browser groups and time-permitting real-provider smoke checks follow deployment; those results are not claimed in this predeployment record. Video URL and recording commit 7775866 are unchanged.

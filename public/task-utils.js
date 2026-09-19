@@ -14,11 +14,11 @@ export function validDate(value) {
   return !Number.isNaN(date.getTime()) && localDate(date) === value;
 }
 export function dueCue(task, today = localDate()) {
-  if (task.done) return "Completed";
-  if (!task.due) return "No due date";
-  if (task.due < today) return "Overdue";
-  if (task.due === today) return "Due today";
-  return "Upcoming";
+  if (task.done) return "completed";
+  if (!task.due) return "no_date";
+  if (task.due < today) return "overdue";
+  if (task.due === today) return "due_today";
+  return "upcoming";
 }
 export function sortTasks(tasks) {
   return [...tasks].sort(

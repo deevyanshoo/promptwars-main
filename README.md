@@ -51,6 +51,14 @@ The only runtime GenAI service is **Google Gemini on Vertex AI**, configured mod
 
 Browser SpeechRecognition and SpeechSynthesis are separate browser features, not Gemini audio understanding. Dictation uses `hi-IN` or `en-IN`, starts on a click, appends editable text and never submits automatically. The browser may use its own online service. Read aloud chooses a matching-language voice, loads `voiceschanged`, cancels previous playback and provides Stop. Missing voices and denied or unsupported microphone access retain a visual/typing fallback. Audio stops on competing actions, navigation, language changes and leaving the page. Actual main-build checks and limitations are in `VERIFICATION.md`; the prior warmup microphone success is not presented as a new main-build live speech test.
 
+## Module boundaries and state invariants
+
+- `server.mjs` and `lib/http.mjs` own routing, body limits, same-origin checks and shared admission. `lib/gemini.mjs` owns provider configuration, call limits and timeouts.
+- `lib/dag.mjs` schedules declared dependencies. Extraction/planning workflows and contracts validate data at each boundary. Both planning branches must succeed before composition.
+- `public/api.js` handles requests. `photo.js`, `camera.js` and `voice.js` own transient capture resources. Only the current recognition session may deliver callbacks.
+- `plans.js` owns validated local persistence and the pure completion helper. `task-utils.js` owns local-date validation and language-independent cue keys. Production rendering and tests use these same helpers; `i18n.js` translates the keys.
+- `app.js` coordinates events and current draft state; `render.js` builds safe text-only UI. Replacing a photo invalidates its review and draft, never saved plans. A failed planning request retains its exact reviewed source, locale and clarification for retry. Editing the source or changing language invalidates that retry. Completion records the user's confirmation only, and persistence requires explicit saving.
+
 ## Run and test
 
 Use Node.js 22 and existing Google Application Default Credentials outside Git:
@@ -68,7 +76,7 @@ Open http://localhost:8080. `PORT` is supported; the server binds `0.0.0.0`. `GE
 
 ### Optional focused browser regressions
 
-These exercise real UI event handlers with mocked API responses. They are separate from the Node test count and real-provider smoke checks. Install verification tools outside the application repository. With Node.js 22, run these commands from the app folder in a POSIX shell:
+The local quality candidate passes 35 Node tests and 10 focused browser groups. These browser checks exercise real UI event handlers with mocked API responses and controlled speech sessions; they are not new live-provider or physical-microphone verification. They are separate from the Node test count and real-provider smoke checks. Install verification tools outside the application repository. With Node.js 22, run these commands from the app folder in a POSIX shell:
 
 ```sh
 DAYWELL_TEST_TOOLS="$(mktemp -d)"
@@ -78,9 +86,9 @@ PLAYWRIGHT_MODULE="$DAYWELL_TEST_TOOLS/node_modules/playwright/index.mjs" \
 APP_URL=http://localhost:8080 node test/release.browser.mjs
 ```
 
-Start the app separately with `npm start`. The default uses Playwright's installed Chromium on the host OS. An optional `CHROME_PATH` selects an existing Chrome executable. The suite checks photo/draft invalidation, saved-plan preservation, failure followed by preference changes, zero-step resume and timer-refreshed daily controls. Browser recordings and local evidence paths in VERIFICATION.md are not required to run the app.
+Start the app separately with `npm start`. The default uses Playwright's installed Chromium on the host OS. An optional `CHROME_PATH` selects an existing Chrome executable. The suite checks photo/draft invalidation, saved-plan preservation, failure followed by preference changes, zero-step resume, timer-refreshed daily controls, exact-request retries, retired recognition callbacks, and translated date/completion behavior. Browser recordings and local evidence paths in VERIFICATION.md are not required to run the app.
 
-Development assistance used OpenAI Codex. The application does not call OpenAI APIs. Synthetic notice fixtures were drawn programmatically. Browser speech, local system-voice demo narration, FFmpeg, Cloud Run and video hosting are not additional runtime GenAI services.
+Development assistance used OpenAI Codex. The application does not call OpenAI APIs. Programmatically drawn images are used as automated-test fixtures. The actual submitted video uses two different synthetic photos, 01-community-notice-en.png and 03-suspicious-payment.png, created with OpenAI image generation outside the app. Browser speech, local system-voice demo narration, FFmpeg, Cloud Run and video hosting are not additional runtime GenAI services.
 
 ## Deploy
 
@@ -105,3 +113,5 @@ Optional live camera help sessions, simulated SOS, emergency dispatch, mobile ap
 ## Submission demo
 
 [Watch the 119-second unlisted demo](https://youtu.be/eXG8rFQDzvY). It records public application release `7775866` with English narration and the default Hindi interface. The two synthetic notice photos came from OpenAI image generation outside Daywell. OpenAI Codex assisted development; runtime GenAI remains Gemini on Vertex AI only. Narration uses local macOS speech synthesis, separate from optional browser speech in the app. Photos and video are kept outside Git.
+
+The quality candidate changes internal state handling and shared helpers, not the successful photo-to-review-to-plan, guided completion, save/resume or fraud-caution journey shown in the video. The video remains a recording of `7775866`, not a newer commit. Candidate tests exercise these behaviors locally with controlled responses. After an authorized deployment, repeat the two Demo Pack photo journeys on the public URL using real Gemini and verify the deployed health commit before claiming new-release demo-path verification.

@@ -162,3 +162,21 @@ test("corrupt storage is preserved, quota and unavailable storage fail visibly",
   assert.equal(quota.savePlan(makePlan(response, "hi")), false);
   assert.equal(quota.warning, "storage_failed");
 });
+
+test("plan date status prioritizes pending dates and completion does not mutate the source", () => {
+  const plan = makePlan(response, "hi");
+  plan.steps[0].due = "2026-09-18";
+  plan.steps[1].due = "2026-09-19";
+  const completed = completeStep(plan, plan.steps[0].id, true);
+  assert.equal(plan.steps[0].done, false);
+  assert.equal(planStatus(plan, "2026-09-19"), "overdue");
+  assert.equal(planStatus(completed, "2026-09-19"), "due_today");
+  completed.steps[1].due = "2026-09-20";
+  assert.equal(planStatus(completed, "2026-09-19"), "upcoming");
+  completed.steps[1].due = "";
+  assert.equal(planStatus(completed, "2026-09-19"), "no_date");
+  assert.equal(
+    planStatus(completeStep(completed, completed.steps[1].id, true)),
+    "completed",
+  );
+});

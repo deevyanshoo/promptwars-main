@@ -15,9 +15,14 @@ export function createVoiceControls({
     voices = synth.getVoices();
   });
   function stopDictation() {
-    if (recognition) {
-      recognition.stop();
-      recognition = null;
+    const stopped = recognition;
+    // Retire ownership before stop(), which may synchronously fire callbacks.
+    recognition = null;
+    if (stopped) {
+      try {
+        stopped.stop();
+      } catch {}
+      onVoiceStatus("dictation_review");
     }
     onListening(false);
   }
@@ -46,10 +51,12 @@ export function createVoiceControls({
     let failed = false,
       received = false;
     r.onstart = () => {
+      if (recognition !== r) return;
       onListening(true);
       onVoiceStatus("listening");
     };
     r.onresult = (e) => {
+      if (recognition !== r) return;
       let result = "";
       for (let i = e.resultIndex; i < e.results.length; i++)
         if (e.results[i].isFinal) result += e.results[i][0].transcript + " ";
@@ -59,6 +66,7 @@ export function createVoiceControls({
       }
     };
     r.onerror = (e) => {
+      if (recognition !== r) return;
       failed = true;
       onVoiceStatus(
         {
@@ -71,7 +79,8 @@ export function createVoiceControls({
       );
     };
     r.onend = () => {
-      if (recognition === r) recognition = null;
+      if (recognition !== r) return;
+      recognition = null;
       onListening(false);
       if (!failed)
         onVoiceStatus(received ? "dictation_review" : "voice_silence");
@@ -79,6 +88,7 @@ export function createVoiceControls({
     try {
       r.start();
     } catch {
+      if (recognition !== r) return;
       recognition = null;
       onListening(false);
       onVoiceStatus("voice_failed");

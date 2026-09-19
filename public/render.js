@@ -1,5 +1,5 @@
 import { t, getLocale } from "./i18n.js";
-import { localDate, sortTasks } from "./task-utils.js";
+import { localDate, sortTasks, dueCue } from "./task-utils.js";
 import { nextStepIndex, planStatus } from "./plans.js";
 export function el(tag, text, cls) {
   const n = document.createElement(tag);
@@ -80,19 +80,7 @@ export function renderPlan(
     if (step.done) li.append(el("p", t("completed"), "small"));
     else if (step.due)
       li.append(
-        el(
-          "p",
-          t(
-            step.due < localDate()
-              ? "overdue"
-              : step.due === localDate()
-                ? "due_today"
-                : "upcoming",
-          ) +
-            ": " +
-            formatDate(step.due),
-          "small",
-        ),
+        el("p", t(dueCue(step)) + ": " + formatDate(step.due), "small"),
       );
     list.append(li);
   }
@@ -238,21 +226,7 @@ export function renderDay({
     row.append(label);
     if (task.due)
       row.append(
-        el(
-          "p",
-          t(
-            task.done
-              ? "completed"
-              : task.due < localDate()
-                ? "overdue"
-                : task.due === localDate()
-                  ? "due_today"
-                  : "upcoming",
-          ) +
-            ": " +
-            formatDate(task.due),
-          "small",
-        ),
+        el("p", t(dueCue(task)) + ": " + formatDate(task.due), "small"),
       );
     const del = button("delete", () => onTaskDelete(task.id), "text-action");
     del.setAttribute("aria-label", t("delete_task", { text: task.title }));
@@ -266,10 +240,11 @@ export function renderDay({
     .filter((s) => !s.done)
     .sort((a, b) => (a.due || "9999").localeCompare(b.due || "9999"));
   const today = localDate();
+  const cues = pending.map((step) => dueCue(step, today));
   document.querySelector("#day-counts").textContent = t("day_counts", {
-    overdue: pending.filter((s) => s.due && s.due < today).length,
-    today: pending.filter((s) => s.due === today).length,
-    upcoming: pending.filter((s) => s.due > today).length,
+    overdue: cues.filter((key) => key === "overdue").length,
+    today: cues.filter((key) => key === "due_today").length,
+    upcoming: cues.filter((key) => key === "upcoming").length,
   });
   document.querySelector("#next-action").textContent = pending.length
     ? t("next_action", { text: pending[0].title })

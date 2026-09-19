@@ -1,4 +1,4 @@
-import { validDate, validTask, localDate } from "./task-utils.js";
+import { validDate, validTask, localDate, dueCue } from "./task-utils.js";
 export const STORAGE_KEY = "daywell.main.v2";
 const id = () => globalThis.crypto.randomUUID();
 const text = (v, max) =>
@@ -60,10 +60,11 @@ export function nextStepIndex(plan) {
 export function planStatus(plan, today = localDate()) {
   const pending = plan.steps.filter((s) => !s.done);
   if (!pending.length) return "completed";
-  if (pending.some((s) => s.due && s.due < today)) return "overdue";
-  if (pending.some((s) => s.due === today)) return "due_today";
-  if (pending.some((s) => s.due > today)) return "upcoming";
-  return "no_date";
+  const cues = pending.map((step) => dueCue(step, today));
+  return (
+    ["overdue", "due_today", "upcoming"].find((key) => cues.includes(key)) ||
+    "no_date"
+  );
 }
 export function createPlanStore(storage) {
   let state = { version: 2, locale: "hi", large: false, plans: [], tasks: [] },

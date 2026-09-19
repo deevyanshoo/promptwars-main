@@ -2,7 +2,12 @@ import { getLocale, setLocale, t, translations } from "./i18n.js";
 import { requestWorkflow } from "./api.js";
 import { preparePhoto, releasePhoto } from "./photo.js";
 import { createCamera } from "./camera.js";
-import { createPlanStore, makePlan, nextStepIndex } from "./plans.js";
+import {
+  createPlanStore,
+  makePlan,
+  nextStepIndex,
+  completeStep,
+} from "./plans.js";
 import { validDate } from "./task-utils.js";
 import { createVoiceControls } from "./voice.js";
 import {
@@ -21,6 +26,7 @@ const store = createPlanStore(storage);
 let photo = null,
   activePlan = null,
   activeSource = null,
+  failedPlanRequest = null,
   execution = null,
   guideIndex = null,
   busy = false,
@@ -101,6 +107,7 @@ function clearCurrentDraft() {
   status("plan-status", null);
 }
 function invalidatePhotoReview() {
+  clearPlanRetry();
   voice.stopAll();
   clearCurrentDraft();
   reviewRequired = false;
@@ -115,6 +122,7 @@ function invalidatePhotoReview() {
   inputChanged(false);
 }
 function inputChanged(edited = true) {
+  if (edited) clearPlanRetry();
   $("character-count").textContent =
     `${$("message").value.length.toLocaleString(getLocale())} / 4,000`;
   if (reviewRequired && edited) $("review-confirm").checked = false;
@@ -212,10 +220,15 @@ function changeStep(id, patch) {
     status("plan-status", "date_invalid");
     return;
   }
-  activePlan = {
-    ...activePlan,
-    steps: activePlan.steps.map((s) => (s.id === id ? { ...s, ...patch } : s)),
-  };
+  if (patch.done !== undefined)
+    activePlan = completeStep(activePlan, id, patch.done);
+  if (patch.due !== undefined)
+    activePlan = {
+      ...activePlan,
+      steps: activePlan.steps.map((s) =>
+        s.id === id ? { ...s, due: patch.due } : s,
+      ),
+    };
   if (saved()) store.savePlan(activePlan);
   render();
   if (guideIndex !== null) $("guide").querySelector(".primary")?.focus();
@@ -293,10 +306,32 @@ function resume(id) {
   renderCurrent();
   $("result-heading").focus();
 }
-async function planMessage(clarification = "") {
+function clearPlanRetry() {
+  failedPlanRequest = null;
+  $("request-error").hidden = true;
+}
+async function planMessage(clarification = "", retryRequest = null) {
   if (busy) return;
+  // A retry reuses the reviewed payload, never a mixture of old and new fields.
+  if (
+    retryRequest &&
+    (retryRequest.message !== $("message").value ||
+      retryRequest.locale !== getLocale())
+  ) {
+    clearPlanRetry();
+    $("message").focus();
+    return;
+  }
+  if (!retryRequest) clearPlanRetry();
   clearCurrentDraft();
-  const message = $("message").value;
+  const request =
+    retryRequest ||
+    Object.freeze({
+      message: $("message").value,
+      locale: getLocale(),
+      clarification,
+    });
+  const { message } = request;
   if (!message.trim() || message.length > 4000) {
     error("request-error", "input_invalid");
     $("message").focus();
@@ -307,20 +342,17 @@ async function planMessage(clarification = "") {
     $("review-confirm").focus();
     return;
   }
-  if (clarification.length > 800) {
+  if (request.clarification.length > 800) {
     status("plan-status", "clarification_invalid");
     return;
   }
+  clearPlanRetry();
   voice.stopAll();
   camera.stop();
   $("request-error").hidden = true;
   setBusy(true, "plan");
   try {
-    const response = await requestWorkflow("/api/understand", {
-      message,
-      locale: getLocale(),
-      clarification,
-    });
+    const response = await requestWorkflow("/api/understand", request);
     activePlan = makePlan(response.plan, response.locale);
     activeSource = message;
     guideIndex = null;
@@ -329,6 +361,7 @@ async function planMessage(clarification = "") {
     render();
     $("result-heading").focus();
   } catch (e) {
+    failedPlanRequest = request;
     execution = e.execution || null;
     renderExecution(execution);
     error("request-error", e.code || "planning_failed");
@@ -398,7 +431,10 @@ $("message-form").addEventListener("submit", (e) => {
   e.preventDefault();
   planMessage();
 });
-$("retry").onclick = () => planMessage();
+$("retry").onclick = () => {
+  if (failedPlanRequest) planMessage("", failedPlanRequest);
+  else planMessage();
+};
 $("extract-button").onclick = extract;
 $("extract-retry").onclick = extract;
 $("message").oninput = inputChanged;
@@ -439,6 +475,7 @@ for (const name of ["ordinary", "suspicious"])
   };
 for (const locale of ["hi", "en"])
   $("language-" + locale).onclick = () => {
+    if (locale !== getLocale()) clearPlanRetry();
     voice.stopAll();
     camera.stop();
     store.preferences(locale, store.state.large);

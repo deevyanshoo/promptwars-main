@@ -77,20 +77,21 @@ test("malformed AI branch and upstream failure cannot bypass join", async () => 
 test("date cues use local calendar strings, not UTC conversion; completed tasks are not overdue", () => {
   assert.equal(
     dueCue({ due: "2026-09-18", done: false }, "2026-09-19"),
-    "Overdue",
+    "overdue",
   );
   assert.equal(
     dueCue({ due: "2026-09-19", done: false }, "2026-09-19"),
-    "Due today",
+    "due_today",
   );
   assert.equal(
     dueCue({ due: "2026-09-20", done: false }, "2026-09-19"),
-    "Upcoming",
+    "upcoming",
   );
   assert.equal(
     dueCue({ due: "2026-09-18", done: true }, "2026-09-19"),
-    "Completed",
+    "completed",
   );
+  assert.equal(dueCue({ due: "", done: false }, "2026-09-19"), "no_date");
   assert.equal(validDate("2026-02-30"), false);
   assert.equal(validDate("2028-02-29"), true);
   assert.equal(
