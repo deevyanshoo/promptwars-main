@@ -1,15 +1,59 @@
 # Daywell
 
-Daywell helps older adults understand everyday messages and turn chosen next steps into a practical daily plan. This is the Google PromptWars main-challenge workspace, seeded from the tested warmup.
+Daywell is a Hindi-first daily organizer for the **AI For Senior Citizens** challenge. Read a photographed notice, review the words, understand the message and its cautions, follow a step, then explicitly save a plan and return to it.
 
-- Main deployment: pending. The warmup URL is not the main submission link.
-- Repository: https://github.com/deevyanshoo/promptwars-main
-- Service: `promptwars-main`, project `promptwars-divyanshu-260919`, region `asia-south1`.
-- Branch: `main` only. No event submission is performed by this project.
+- Public repository: https://github.com/deevyanshoo/promptwars-main
+- Main service: `promptwars-main`, Cloud Run, `asia-south1`. Public URL pending deployment verification.
+- Node.js 22, vanilla HTML/CSS/JavaScript, `@google/genai` 2.23.0. Only branch `main`.
+- The separate warmup repository and service are unchanged. No event form is submitted automatically.
 
-## Run locally
+## Working features
 
-Use Node.js 22 and the prepared Google Application Default Credentials with Vertex AI access. Credentials stay outside this repository.
+Choose one JPEG, PNG or WebP, preview it locally and explicitly request extraction. The browser prepares a bounded image. Gemini transcribes it in its original language and identifies uncertainty. Review and edit the text, confirm review, then request a plan. Pasting and optional dictation are complete alternatives. Synthetic ordinary and suspicious-message examples use the real model workflow.
+
+A plan contains an attributed explanation, cautions, essential questions, up to five ordered steps and optional preparation. Guided mode shows one step with Listen, Done, Undo, Back, Next and overview controls. Completion records the user's confirmation, never an external action. A clarification reruns both independent planning branches with the reviewed message.
+
+Explicit Save keeps approved plan content, user-selected dates and completion in browser localStorage. Resume after reload, undo, delete, manual tasks and confirmed clear-data are supported. No inferred deadline is saved. Opening the page shows overdue, due-today and upcoming counts and a next useful action. There are no background reminders. Raw source messages and images are not persisted. Existing `daywell.v1` tasks are safely migrated. Invalid stored data is preserved until the user clears it; blocked storage and quota failures are visible.
+
+Hindi is the first-visit language. English switching and larger text persist. Saved content is not translated when the interface changes. Explicit translation keys cover controls and states. The interface uses 20px text, large native controls, visible focus, safe text rendering, mobile layout and reduced-motion support.
+
+## Actual executable DAGs
+
+```mermaid
+flowchart LR
+  U[validate_upload] --> X[extract_notice] --> T[validate_extraction]
+  T -. User reviews and confirms in a separate request .-> V[validate_input]
+  V --> E[explain_and_extract]
+  V --> S[review_safety]
+  E --> C[compose_plan]
+  S --> C
+  C --> O[validate_output]
+```
+
+`lib/dag.mjs` schedules declared dependencies, rejects duplicate IDs, missing dependencies and cycles, and runs ready independent nodes concurrently. Each node runs at most once with isolated request state and only its dependency outputs. Failed required nodes block downstream composition. Actual node statuses and durations appear in a collapsed disclosure. No prompts, hidden reasoning or provider logs are exposed.
+
+The two planning branches independently receive the original reviewed source and any user clarification. Structured model output is validated before deterministic composition. Substantial risk replaces candidate instructions with cautious verification steps and removes preparation. Advisory signals are not definitive fraud verdicts. The application neither fetches links nor contacts anyone. A separate extraction request ends before the human review boundary.
+
+## Modules and limits
+
+- `server.mjs`, `lib/http.mjs`: static route allowlist, HTTP limits, shared admission, sanitized error categories and security headers.
+- `lib/gemini.mjs`: the isolated, injectable Vertex AI gateway.
+- `lib/images.mjs`, `lib/contracts.mjs`, `lib/extraction.mjs`, `lib/workflow.mjs`: upload contracts, strict output validation and declared DAGs.
+- `public/api.js`, `photo.js`, `voice.js`, `plans.js`, `render.js`, `i18n.js`: API, transient photo preparation, browser speech, validated persistence, focused rendering and keyed copy. `app.js` connects the controls.
+
+Input is bounded to 4,000 characters plus an optional 800-character clarification. Original photos are limited to 12 MiB, 12,000px per edge and 48 million decoded pixels. Prepared images have a longest edge of 1,600px and a 3 MiB limit. The server validates canonical base64, permitted MIME, matching image signatures, supported dimensions and structural bounds. It accepts no remote URLs or PDFs and writes no photos to disk. Planning bodies are limited to 20 KB; extraction bodies to 4.3 MB.
+
+Admission is shared across endpoints: two active workflows, four concurrent provider calls, 20 requests per minute per process. Each SDK call allows at most two attempts for transient HTTP failures. Calls have a 40-second timeout, workflows a 45-second deadline and HTTP requests a 50-second deadline. Planning allows 3,000 output tokens per branch; extraction 6,000. Malformed output is never a successful fallback. Cloud Run is capped at one instance, so process-local admission resets on restart.
+
+## GenAI and browser speech
+
+The only GenAI service used is **Google Gemini on Vertex AI**, configured model `gemini-3.8-flash`, global endpoint, `vertexai: true`, thinking level `LOW`, SDK **2.23.0**. Photo extraction makes one logical call. Planning makes two parallel logical calls. There is no separate translation call. Navigation, saving, completion and due-date cues are deterministic and make no model calls.
+
+Browser SpeechRecognition and SpeechSynthesis are separate browser features, not Gemini audio understanding. Dictation uses `hi-IN` or `en-IN`, starts on a click, appends editable text and never submits automatically. The browser may use its own online service. Read aloud chooses a matching-language voice, loads `voiceschanged`, cancels previous playback and provides Stop. Missing voices and denied or unsupported microphone access retain a visual/typing fallback. Audio stops on competing actions, navigation, language changes and leaving the page. Actual main-build checks and limitations are in `VERIFICATION.md`; the prior warmup microphone success is not presented as a new main-build live speech test.
+
+## Run and test
+
+Use Node.js 22 and existing Google Application Default Credentials outside Git:
 
 ```sh
 npm ci
@@ -17,62 +61,12 @@ export GOOGLE_CLOUD_PROJECT=promptwars-divyanshu-260919
 export GOOGLE_CLOUD_LOCATION=global
 export GEMINI_MODEL=gemini-3.8-flash
 npm start
-```
-
-Open http://localhost:8080. `PORT` defaults to 8080; the server binds to `0.0.0.0`. `GET /health` returns service status and the deployed `APP_COMMIT` when configured. Health does not call Gemini.
-
-## Inherited baseline functionality
-
-Photo extraction and guided plans are planned main-round improvements and are not complete yet.
-
-- Hindi is the default on first visit. Switch between हिन्दी and English; the choice is saved. The full interface and both Gemini branches use the selected language. Input can be Hindi or English. Existing task text never changes when the language changes.
-- Paste up to 4,000 characters or use the clearly labeled appointment example. Two real server-side Gemini calls provide an explanation, manageable steps, preparation suggestions, questions, and an independent caution review.
-- Select suggestions before adding them to My day. No task is saved automatically. Add manual tasks, choose or change optional dates, mark tasks as done, and delete them.
-- On opening the page, see overdue, due-today, and upcoming counts plus the next incomplete task. Dates are compared as local calendar dates. Relative dates require clarification and all task dates are user-selected.
-- Approved tasks and the text-size preference persist in this browser's localStorage. The pasted message and full AI response are not persisted. Approved tasks may retain AI preparation suggestions. Clear saved data is available with a confirmation.
-- Responsive two-column desktop layout and message-first mobile layout. Native labeled controls, 20px default body text, larger-text mode, visible focus, keyboard operation, and optional browser speech features. See the separate browser-speech notes below.
-- Honest loading and retry states. Both AI branches must succeed. Input remains visible after failures. No fake AI fallback.
-
-## Actual backend DAG
-
-```mermaid
-flowchart LR
-  V[validate_input] --> E[explain_and_extract]
-  V --> S[review_safety]
-  E --> C[compose_plan]
-  S --> C
-  C --> O[validate_output]
-```
-
-`lib/gemini.mjs` owns provider configuration, concurrency and the model boundary. `lib/dag.mjs` executes node declarations with `id`, `dependsOn`, and `async run(context, dependencyResults)`. It rejects duplicate IDs, missing dependencies, and cycles. Ready independent nodes launch concurrently. Each node runs at most once; only declared dependency outputs are passed to it. All request state is local to that execution. The deterministic join waits for both required AI results; a failed or invalid branch blocks the join and final validation. Each retry creates a new graph execution.
-
-`validate_input` runs before any model call. `explain_and_extract` and `review_safety` independently receive the original untrusted message, use different system instructions and structured JSON schemas, and validate their results in application code. `compose_plan` retains cautions and questions. Substantial risk replaces all candidate steps with reviewer verification steps and omits preparation suggestions that might encourage acting on the request. `validate_output` enforces final types, field lengths, allowed risk values, and at most five steps. Generated dash punctuation is normalized deterministically without another AI call; pasted text is preserved.
-
-The collapsed “How this was prepared” disclosure shows real completed, failed, or blocked node statuses and durations. It contains no model reasoning, prompts, credentials, or raw logs.
-
-## AI and security limits
-
-The only GenAI service is Google Gemini on Vertex AI, model `gemini-3.8-flash`, through pinned `@google/genai` **2.23.0** with `vertexai: true`, global model endpoint and thinking level `LOW`. Every valid accepted explanation uses two independent logical model calls, with 3,000 output tokens per branch. Each call allows at most two SDK attempts for transient HTTP errors (including 429), with a two-second initial backoff. A request therefore makes at most four upstream attempts. A 40-second upstream timeout and 45-second overall workflow deadline still apply. Malformed model content is not retried or bypassed. There are at most two active workflows and four active SDK calls per process. Global admission is capped at 20 requests per minute per process; excess requests receive HTTP 429 and Retry-After. Request bodies are capped at 20 KB. Cloud Run is capped at one instance; these in-memory limits reset when an instance restarts.
-
-No login, database, additional AI provider, link fetching, tools, external actions, credentials in browser code, or background notifications. Pasted content is untrusted data and model text is rendered through textContent, never HTML. Strict same-origin CSP, no CORS permission, cross-site browser POST rejection, bounded fields, fixed static-file routes, and non-root container runtime reduce exposure. Application logs record only failure categories, not pasted text or model output. Managed infrastructure may retain request metadata. Google processes the message, as stated before submission.
-
-The model can be wrong, miss risk indicators, or produce unsuitable advice. Review signals do not guarantee safety and are not definitive scam verdicts. Important medical, financial, and appointment details need independent confirmation. Browser data is accessible to people using the same browser profile and does not sync between devices. Speech availability and processing depend on the browser and operating system. Cancelling an SDK request does not guarantee provider-side compute has stopped. This short-lived public demo has basic throttling, not production abuse protection.
-
-## Browser speech (separate from GenAI)
-
-Optional browser SpeechRecognition uses `hi-IN` or `en-IN`. It starts only on a click, appends final speech to existing text, and never submits automatically. Users review and edit before sending. It stops on completion, Stop, language change, AI submission, reading aloud, or leaving the page. Microphone denial, silence, network failure and unsupported browsers retain a typing fallback. The browser may use its own online speech service; Daywell adds no speech provider or credentials.
-
-SpeechSynthesis loads voices and handles `voiceschanged`, selects a matching Hindi or English voice, cancels prior speech, and offers Listen and Stop reading. Missing language voices produce an honest notice; Hindi is never silently read with an English voice. The demo browser exposed the Hindi voice Lekha, and programmatic speaking/stop states passed. The user confirmed the real local microphone check succeeded. Audio intelligibility has not been independently assessed by the agent. Browser support varies.
-
-## Tests and deployment
-
-```sh
 npm test
 ```
 
-The focused Node test suite checks concurrent branches, join ordering, dependency-only outputs, at-most-once execution, failure blocking, graph validation, execution deadlines, request isolation, invalid input without AI calls, malformed model output, risk-based replacement, date cues, HTTP errors, and throttling. Live browser and public deployment checks are documented in `VERIFICATION.md` when complete.
+Open http://localhost:8080. `PORT` is supported; the server binds `0.0.0.0`. `GET /health` reports `APP_COMMIT` without calling Gemini. No login or database is required.
 
-Deployment uploads only package manifests, Dockerfile, server, library, and public assets. Credentials, dependencies, tests, screenshots, recordings, and local environments are excluded.
+## Deploy
 
 ```sh
 gcloud run deploy promptwars-main \
@@ -84,4 +78,10 @@ gcloud run deploy promptwars-main \
   --set-env-vars GOOGLE_CLOUD_PROJECT=promptwars-divyanshu-260919,GOOGLE_CLOUD_LOCATION=global,GEMINI_MODEL=gemini-3.8-flash,APP_COMMIT=YOUR_COMMIT
 ```
 
-The existing readiness service remains private and unchanged. See `DEMO.md` for a 60 to 90 second walkthrough.
+Only package manifests, Dockerfile, server, library and public assets enter deployment uploads. Credentials, dependencies, recordings, screenshots and local environments are excluded. The container runs as non-root. Restrictive CSP, same-origin POST checks and textContent rendering remain in place.
+
+## Assumptions and limitations
+
+This is a bounded public demonstration, not a production emergency, medical, financial or fraud-detection service. Gemini can misread images, miss risk indicators or offer unsuitable advice. Confirm important details independently. User review cannot guarantee accuracy. Browser storage is specific to a profile, accessible to people using it and not synchronized or encrypted by Daywell. Google processes submitted content; no infrastructure-level zero-retention promise is made. Application logs omit messages, photos and provider content, while managed infrastructure may retain metadata. Provider cancellation cannot guarantee remote compute stops.
+
+Optional live camera help sessions, simulated SOS, emergency dispatch, mobile apps and calendar export are not implemented. The core is prioritized for deployment. See `VERIFICATION.md`, `DEMO.md` and `SUBMISSION.md` for evidence and submission review materials.
