@@ -20,6 +20,13 @@ function png(width = 32, height = 32) {
     b.writeUInt32BE(data.length);
     b.write(name, 4);
     data.copy(b, 8);
+    let crc = 0xffffffff;
+    for (const byte of b.subarray(4, data.length + 8)) {
+      crc ^= byte;
+      for (let bit = 0; bit < 8; bit++)
+        crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
+    }
+    b.writeUInt32BE((crc ^ 0xffffffff) >>> 0, data.length + 8);
     return b;
   };
   const ihdr = Buffer.alloc(13);
@@ -47,6 +54,12 @@ test("invalid upload types, base64, signature, MIME and limits make zero AI call
     { mimeType: "application/pdf", data: "AAAA" },
     { ...png(), mimeType: "image/jpeg" },
     { ...png(), data: "not base64" },
+    {
+      ...png(),
+      data: Buffer.from(png().data, "base64")
+        .fill(0, 29, 33)
+        .toString("base64"),
+    },
     { ...png(), data: "A".repeat(Math.ceil(MAX_IMAGE_BYTES / 3) * 4 + 4) },
     png(1601, 32),
     png(1, 32),

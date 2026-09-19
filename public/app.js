@@ -35,7 +35,9 @@ function status(id, key) {
 function error(id, key) {
   $(id).hidden = false;
   const message = $(id).querySelector("p");
-  message.dataset.statusKey = translations[getLocale()][key] ? key : "planning_failed";
+  message.dataset.statusKey = translations[getLocale()][key]
+    ? key
+    : "planning_failed";
   message.textContent = t(message.dataset.statusKey);
 }
 function storageWarning() {
@@ -165,7 +167,12 @@ function changeStep(id, patch) {
   if (saved()) store.savePlan(activePlan);
   render();
   if (guideIndex !== null) $("guide").querySelector(".primary")?.focus();
-  else document.querySelector(`[data-step-id="${id}"][data-field="${patch.due !== undefined ? "due" : "done"}"]`)?.focus();
+  else
+    document
+      .querySelector(
+        `[data-step-id="${id}"][data-field="${patch.due !== undefined ? "due" : "done"}"]`,
+      )
+      ?.focus();
 }
 function renderCurrent() {
   if (!activePlan) return;
@@ -179,6 +186,8 @@ function renderCurrent() {
         if (store.savePlan(activePlan)) status("plan-status", "saved");
         else status("plan-status", store.warning);
         render();
+        $("plan-status").tabIndex = -1;
+        $("plan-status").focus();
       } catch (e) {
         status("plan-status", e.message);
       }

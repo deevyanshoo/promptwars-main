@@ -3,7 +3,7 @@
 Daywell is a Hindi-first daily organizer for the **AI For Senior Citizens** challenge. Read a photographed notice, review the words, understand the message and its cautions, follow a step, then explicitly save a plan and return to it.
 
 - Public repository: https://github.com/deevyanshoo/promptwars-main
-- Main service: `promptwars-main`, Cloud Run, `asia-south1`. Public URL pending deployment verification.
+- Public app: https://promptwars-main-589901835092.asia-south1.run.app (service `promptwars-main`, Cloud Run, `asia-south1`).
 - Node.js 22, vanilla HTML/CSS/JavaScript, `@google/genai` 2.23.0. Only branch `main`.
 - The separate warmup repository and service are unchanged. No event form is submitted automatically.
 

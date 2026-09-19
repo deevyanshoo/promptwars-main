@@ -176,14 +176,27 @@ test("concurrent request input and output state are isolated", async () => {
   assert.equal(results[1].outputs.one, "second");
 });
 
-test('external cancellation promptly blocks downstream even if a node ignores the signal', async () => {
+test("external cancellation promptly blocks downstream even if a node ignores the signal", async () => {
   const controller = new AbortController();
   const start = performance.now();
-  const promise = executeDag([
-    {id:'slow',dependsOn:[],run:async()=>new Promise(()=>{})},
-    {id:'join',dependsOn:['slow'],run:async()=>{throw new Error('must not run');}}
-  ],{}, {signal:controller.signal,timeoutMs:5000});
-  setTimeout(()=>controller.abort(),10);
-  await assert.rejects(promise,error=>error.execution.nodes[1].status==='blocked');
-  assert.ok(performance.now()-start<500);
+  const promise = executeDag(
+    [
+      { id: "slow", dependsOn: [], run: async () => new Promise(() => {}) },
+      {
+        id: "join",
+        dependsOn: ["slow"],
+        run: async () => {
+          throw new Error("must not run");
+        },
+      },
+    ],
+    {},
+    { signal: controller.signal, timeoutMs: 5000 },
+  );
+  setTimeout(() => controller.abort(), 10);
+  await assert.rejects(
+    promise,
+    (error) => error.execution.nodes[1].status === "blocked",
+  );
+  assert.ok(performance.now() - start < 500);
 });

@@ -69,3 +69,46 @@ test("request throttle has a retry-after header", async () => {
     1,
   );
 });
+
+test("photo and planning routes share active admission and reject cross-origin requests", async () => {
+  let release;
+  const gate = new Promise((resolve) => {
+    release = resolve;
+  });
+  const workflow = async () => {
+    await gate;
+    return { ok: true };
+  };
+  const server = createApp({ workflow, extractionWorkflow: workflow });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const send = (path) =>
+    fetch(base + path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    });
+  try {
+    const forbidden = await fetch(base + "/api/extract", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Origin: "https://unrelated.example",
+      },
+      body: "{}",
+    });
+    assert.equal(forbidden.status, 403);
+    const first = send("/api/extract"),
+      second = send("/api/understand");
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    assert.equal((await send("/api/extract")).status, 429);
+    release();
+    assert.deepEqual(
+      (await Promise.all([first, second])).map((r) => r.status),
+      [200, 200],
+    );
+  } finally {
+    release();
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
