@@ -1,6 +1,6 @@
 # Daywell demo and jury explanation
 
-Target 90 to 120 seconds. Use the public main app and only the synthetic notice. No real personal data. A recording is not claimed until its artifact and playable URL are verified.
+Target 90 to 120 seconds. Use the public main app and only the synthetic notice. No real personal data. Published Unlisted: https://youtu.be/eXG8rFQDzvY. The final 119-second recording uses release 7775866, the two requested Demo Pack photos and English narration.
 
 ## Suggested walkthrough
 
@@ -9,8 +9,8 @@ Target 90 to 120 seconds. Use the public main app and only the synthetic notice.
 Show the main task without a marketing page.
 
 **0:12 to 0:30**
-“Choose a notice photo. It stays local until I ask Google Gemini to read it. The extracted words are editable. I will correct eleven o'clock to eleven thirty, then confirm that I have reviewed the text.”
-Choose the clearly fictional community notice, extract, edit the time and confirm review.
+“Choose a notice photo. It stays local until I ask Google Gemini to read it. The extracted words are editable. I will change Room 2 to Room 4 as a reviewed correction, then confirm that I have reviewed the text.”
+Choose the clearly fictional community notice, extract, edit the room and confirm review.
 
 **0:30 to 0:48**
 “Now Daywell explains the corrected notice in Hindi. One Gemini branch explains the source, while another independently checks the original text for cautions. Both must finish before a plan appears.”
@@ -22,7 +22,7 @@ Complete a guided step, return to overview, save, reload and resume. Briefly sho
 
 **1:12 to 1:38**
 “The same workflow checks a suspicious message. These are specific warning signs, not a guaranteed fraud verdict. At substantial risk, Daywell replaces risky actions with independent verification steps and removes preparation that could help someone comply.”
-Run the synthetic suspicious example through the real workflow. Show cautions, safe steps and optional copyable summary.
+Upload 03-suspicious-payment.png, extract its words, confirm review and run the real workflow. Show cautions, safe steps and optional copyable summary.
 
 **1:38 to 1:50**
 “Plans stay in this browser only. The app has bounded requests, strict structured-output validation and honest retry states. It cannot dispatch help, contact services or guarantee accuracy. The core is live, with an executable DAG and tested save-and-resume.”

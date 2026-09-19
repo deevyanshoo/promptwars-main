@@ -101,3 +101,7 @@ Only package manifests, Dockerfile, server, library and public assets enter depl
 This is a bounded public demonstration, not a production emergency, medical, financial or fraud-detection service. Gemini can misread images, miss risk indicators or offer unsuitable advice. Confirm important details independently. User review cannot guarantee accuracy. Browser storage is specific to a profile, accessible to people using it and not synchronized or encrypted by Daywell. Google processes submitted content; no infrastructure-level zero-retention promise is made. Application logs omit messages, photos and provider content, while managed infrastructure may retain metadata. Provider cancellation cannot guarantee remote compute stops.
 
 Optional live camera help sessions, simulated SOS, emergency dispatch, mobile apps and calendar export are not implemented. The core is prioritized for deployment. See `VERIFICATION.md`, `DEMO.md` and `SUBMISSION.md` for evidence and submission review materials.
+
+## Submission demo
+
+[Watch the 119-second unlisted demo](https://youtu.be/eXG8rFQDzvY). It records public application release `7775866` with English narration and the default Hindi interface. The two synthetic notice photos came from OpenAI image generation outside Daywell. OpenAI Codex assisted development; runtime GenAI remains Gemini on Vertex AI only. Narration uses local macOS speech synthesis, separate from optional browser speech in the app. Photos and video are kept outside Git.

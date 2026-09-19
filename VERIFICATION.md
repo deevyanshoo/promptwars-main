@@ -47,7 +47,7 @@ GitHub API and remote inspection reported a public repository, size 48 KB at the
 
 ## Remaining limitations
 
-Demo recording/upload and final release provenance were still pending at this document update. Optional SOS is not implemented. Hindi playback state and Stop were observed, but audible quality was not assessed. No real microphone recording was supplied during main-build checks. Browser automatic translation interfered with the shared interactive test tab; the independent headless run avoided this, and the final HTML adds a no-automatic-translation hint. Screenshots and recordings stay outside Git.
+Earlier milestone recording/upload was pending; the final release evidence below supersedes that status. Optional SOS is not implemented. Hindi playback state and Stop were observed, but audible quality was not assessed. No real microphone recording was supplied during main-build checks. Browser automatic translation interfered with the shared interactive test tab; the independent headless run avoided this, and the final HTML adds a no-automatic-translation hint. Screenshots and recordings stay outside Git.
 
 ## Requested camera update
 
@@ -68,3 +68,13 @@ Release review identified that replacing a photo could leave the old extracted t
 Compared the supplied `code-quality-day-handlers.patch` against the working changes. The final implementation uses the same named `deleteSavedPlan`, `changeManualTask`, `deleteManualTask` and single `refreshDay` as the patch. Both regular render and the 60-second callback now share these handlers. Deleting the active plan uses `clearCurrentDraft`. No wider refactor was applied.
 
 The sixth focused browser regression explicitly invokes the captured 60-second callback, deletes the active plan, changes text size and checks that the deleted plan cannot reappear. It also checks manual completion/deletion after timer refresh. All six mocked-response browser regression groups pass locally. Portable Playwright setup is documented in README; it is not a runtime dependency. Clarification retry preservation, stale voice callback ownership and the other larger review items are deferred to Attempt 2.
+
+## Final release and requested Demo Pack recording
+
+On 19 September 2026, release `7775866ff69ffb238f44a5d846e5778d071c375d` was deployed as `promptwars-main-00004-bh4`, serving 100 percent of traffic. Anonymous GET /health returned the expected full commit. The six focused browser regression groups passed again against the public app with controlled API responses. The 30 Node tests had passed before this release commit.
+
+A fresh account-free Chrome context recorded real public Gemini calls using exactly `/Users/palaksingh/Downloads/Daywell Demo Pack/01-community-notice-en.png` and `03-suspicious-payment.png`. It showed editable extraction, an explicit Room 2 to Room 4 change and review confirmation, Hindi plan, real five-node statuses, guided completion, explicit save, reload/resume, then separate extraction/review/planning for the suspicious photo. Final safe steps said not to share an OTP or transfer money and to verify through independently known bank channels. The optional unreadable image was not included in this recording.
+
+Artifact outside Git: `/private/tmp/daywell-main-evidence/daywell-demo-pack-final-7775866.mp4`, 119 seconds, 1280x720 H.264 with AAC English narration, 3,172,277 bytes. Narration was generated with local macOS Samantha speech synthesis and muxed before upload. Segment durations were measured and checked for overlap. Selected encoded frames were inspected, and the audio stream contains nonzero samples; this is not a claim of human listening-quality review. Scene timestamps and raw recording are preserved beside the MP4. Both synthetic input photos were generated with OpenAI image generation outside the application, separately from Codex development assistance and runtime Gemini.
+
+YouTube Studio confirmed publication as Unlisted with no copyright issues reported: https://youtu.be/eXG8rFQDzvY. The signed-out browser loaded the titled video and 1:59 player. Publication completed shortly after the 1:20 PM target. The event form was not submitted.
