@@ -68,14 +68,9 @@
               id="text-mode"
               data-i18n="text_tab"
               aria-pressed="false"
-            ></button
-            ><button
-              id="fraud-mode"
-              data-i18n="fraud_tab"
-              aria-pressed="false"
             ></button>
           </div>
-          <p id="fraud-hint" class="notice" data-i18n="fraud_hint" hidden></p>
+          <p class="small muted" data-i18n="automatic_safety"></p>
           <div id="photo-panel">
             <h2 class="panel-title" data-i18n="photo_heading"></h2>
             <p class="muted" data-i18n="photo_hint"></p>
@@ -91,18 +86,11 @@
                   class="file-input"
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
-                /><label
-                  class="button"
-                  for="camera-file"
-                  data-i18n="camera_photo"
-                ></label
-                ><input
-                  id="camera-file"
-                  class="file-input"
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  capture="environment"
-                />
+                /><button
+                  id="camera-start"
+                  type="button"
+                  data-i18n="camera_start"
+                ></button>
               </div>
               <img
                 id="photo-preview"
@@ -111,6 +99,31 @@
                 hidden
               />
             </div>
+            <p class="small muted" data-i18n="camera_notice"></p>
+            <div id="camera-panel" hidden>
+              <video
+                id="camera-video"
+                autoplay
+                muted
+                playsinline
+                data-i18n-label="camera_preview"
+              ></video>
+              <div class="actions">
+                <button
+                  id="camera-take"
+                  type="button"
+                  class="primary"
+                  data-i18n="camera_take"
+                  disabled
+                ></button
+                ><button
+                  id="camera-cancel"
+                  type="button"
+                  data-i18n="cancel"
+                ></button>
+              </div>
+            </div>
+            <p id="camera-status" role="status" hidden></p>
             <div id="photo-actions" hidden>
               <button
                 id="discard-photo"

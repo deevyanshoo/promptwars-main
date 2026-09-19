@@ -9,7 +9,7 @@ Daywell is a Hindi-first daily organizer for the **AI For Senior Citizens** chal
 
 ## Working features
 
-Choose one JPEG, PNG or WebP, preview it locally and explicitly request extraction. The browser prepares a bounded image. Gemini transcribes it in its original language and identifies uncertainty. Review and edit the text, confirm review, then request a plan. Pasting and optional dictation are complete alternatives. Synthetic ordinary and suspicious-message examples use the real model workflow.
+Use either **Photo** or **Type or speak**. Every message receives the same independent safety check automatically. Choose one JPEG, PNG or WebP, or explicitly start the laptop/mobile camera for a video-only live preview. Take photo captures one still; Cancel stops the camera. Tracks also stop on capture, input/navigation changes, page hiding and errors. Camera denial or missing hardware leaves upload and typing available. No microphone is requested by the camera. Preview the still locally and explicitly request extraction. The browser prepares a bounded image. Gemini transcribes it in its original language and identifies uncertainty. Review and edit the text, confirm review, then request a plan. Pasting and optional dictation are complete alternatives. Synthetic ordinary and suspicious-message examples use the real model workflow.
 
 A plan contains an attributed explanation, cautions, essential questions, up to five ordered steps and optional preparation. Guided mode shows one step with Listen, Done, Undo, Back, Next and overview controls. Completion records the user's confirmation, never an external action. A clarification reruns both independent planning branches with the reviewed message.
 
@@ -39,7 +39,7 @@ The two planning branches independently receive the original reviewed source and
 - `server.mjs`, `lib/http.mjs`: static route allowlist, HTTP limits, shared admission, sanitized error categories and security headers.
 - `lib/gemini.mjs`: the isolated, injectable Vertex AI gateway.
 - `lib/images.mjs`, `lib/contracts.mjs`, `lib/extraction.mjs`, `lib/workflow.mjs`: upload contracts, strict output validation and declared DAGs.
-- `public/api.js`, `photo.js`, `voice.js`, `plans.js`, `render.js`, `i18n.js`: API, transient photo preparation, browser speech, validated persistence, focused rendering and keyed copy. `app.js` connects the controls.
+- `public/api.js`, `photo.js`, `camera.js`, `voice.js`, `plans.js`, `render.js`, `i18n.js`: API, transient photo preparation, browser speech, validated persistence, focused rendering and keyed copy. `app.js` connects the controls.
 
 Input is bounded to 4,000 characters plus an optional 800-character clarification. Original photos are limited to 12 MiB, 12,000px per edge and 48 million decoded pixels. Prepared images have a longest edge of 1,600px and a 3 MiB limit. The server validates canonical base64, permitted MIME, matching image signatures, supported dimensions and structural bounds. It accepts no remote URLs or PDFs and writes no photos to disk. Planning bodies are limited to 20 KB; extraction bodies to 4.3 MB.
 

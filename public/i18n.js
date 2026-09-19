@@ -1,5 +1,52 @@
 // Explicit keys only. Model output and saved user content never pass through translation.
 const entries = {
+  automatic_safety: [
+    "हर संदेश में ध्यान देने वाली बातें भी अपने आप जाँची जाती हैं।",
+    "Every message also receives an independent check for cautions.",
+  ],
+  camera_start: ["कैमरा खोलें", "Start camera"],
+  camera_notice: [
+    "कैमरा सिर्फ़ आपकी अनुमति से चलेगा। माइक्रोफ़ोन बंद रहेगा। फ़ोटो लेने के बाद भी, पढ़ने का बटन दबाने तक कुछ नहीं भेजा जाएगा।",
+    "The camera starts only with your permission. The microphone stays off. Even after taking a photo, nothing is sent until you request reading.",
+  ],
+  camera_preview: ["कैमरे का लाइव दृश्य", "Live camera preview"],
+  camera_take: ["फ़ोटो लें", "Take photo"],
+  camera_starting: [
+    "कैमरे की अनुमति का इंतज़ार है। चाहें तो रद्द करें या फ़ोटो चुनें।",
+    "Waiting for camera permission. You can cancel or upload a photo.",
+  ],
+  camera_active: [
+    "कैमरा चालू है। नोटिस सामने रखें, फिर फ़ोटो लें।",
+    "Camera is on. Hold the notice in view, then take a photo.",
+  ],
+  camera_stopped: [
+    "कैमरा बंद है। फ़ोटो चुनकर भी आगे बढ़ सकते हैं।",
+    "Camera stopped. You can also choose a photo to continue.",
+  ],
+  camera_captured: [
+    "फ़ोटो ले ली गई। कैमरा बंद है। भेजने से पहले फ़ोटो देख लें।",
+    "Photo captured. Camera stopped. Review the photo before sending it.",
+  ],
+  camera_denied: [
+    "कैमरे की अनुमति नहीं मिली। ब्राउज़र सेटिंग में अनुमति दें या फ़ोटो चुनें।",
+    "Camera permission was denied. Allow it in browser settings or upload a photo.",
+  ],
+  camera_missing: [
+    "कैमरा नहीं मिला। फ़ोटो चुनें या संदेश लिखें।",
+    "No camera was found. Upload a photo or type the message.",
+  ],
+  camera_unavailable: [
+    "इस ब्राउज़र में कैमरा नहीं खुल रहा। फ़ोटो चुनें या संदेश लिखें।",
+    "Camera access is unavailable in this browser. Upload a photo or type the message.",
+  ],
+  camera_not_ready: [
+    "कैमरा तैयार नहीं हुआ। फिर खोलें या फ़ोटो चुनें।",
+    "The camera was not ready. Start it again or upload a photo.",
+  ],
+  camera_failed: [
+    "कैमरा नहीं खुल सका। दूसरे ऐप में कैमरा बंद करें या फ़ोटो चुनें।",
+    "The camera could not start. Close other camera apps or upload a photo.",
+  ],
   title: ["Daywell | हर दिन के काम", "Daywell | Everyday tasks"],
   skip: ["मुख्य हिस्से पर जाएँ", "Skip to main content"],
   home: ["Daywell का मुख्य पेज", "Daywell home"],

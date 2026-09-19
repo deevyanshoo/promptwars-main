@@ -4,7 +4,7 @@
 
 ## Automated tests
 
-`npm test` on Node v22.23.1: **27 passed, 0 failed** at 12:44 PM IST. HTTP tests require local port binding; the initial sandbox-only invocation failed with EPERM, then passed with permitted local binding.
+`npm test` on Node v22.23.1: **30 passed, 0 failed** at 12:50 PM IST. HTTP tests require local port binding; the initial sandbox-only invocation failed with EPERM, then passed with permitted local binding.
 
 Coverage includes DAG parallel start, join ordering, at-most-once and dependency-scoped results, invalid graph rejection, failure blocking, deadlines and request isolation; gateway concurrency release and malformed responses; invalid uploads without calls, MIME mismatch, canonical base64/size/dimension bounds, extraction schema/unreadable states; substantial-risk replacement; explicit save/completion/undo/reload, date cues, corrupt/unavailable/quota storage; translation parity, prohibited dash punctuation and palette contrast; HTTP limits, sanitized failures and throttling.
 
@@ -48,3 +48,11 @@ GitHub API and remote inspection reported a public repository, size 48 KB at the
 ## Remaining limitations
 
 Demo recording/upload and final release provenance were still pending at this document update. Optional SOS is not implemented. Hindi playback state and Stop were observed, but audible quality was not assessed. No real microphone recording was supplied during main-build checks. Browser automatic translation interfered with the shared interactive test tab; the independent headless run avoided this, and the final HTML adds a no-automatic-translation hint. Screenshots and recordings stay outside Git.
+
+## Requested camera update
+
+The separate Suspicious message tab was removed. There are now exactly two input tabs, Photo and Type or speak. Both retain automatic independent safety review. The suspicious synthetic example remains available.
+
+A real `navigator.mediaDevices.getUserMedia` implementation requests `audio: false`, shows a live video preview, and captures one still into the existing photo preparation/review flow. No upload occurs on camera start or capture. Tests with Chrome's simulated video device passed preview, capture, zero audio tracks, no automatic network request, and track termination on capture, Cancel, input-tab change and pagehide. Controlled NotAllowedError and NotFoundError both kept file upload usable. Three unit tests cover video-only constraints, capture cleanup, late permission response cleanup and fallback states. This does not claim testing a physical laptop camera; user confirmation is pending.
+
+The full real-Gemini browser suite was rerun on the camera build at localhost:8084 and passed photo extraction, corrected Hindi plan, save/resume, all-complete/undo, language persistence and fraud replacement. Redeployment and public camera verification follow this update.

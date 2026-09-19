@@ -1,6 +1,7 @@
 import { getLocale, setLocale, t, translations } from "./i18n.js";
 import { requestWorkflow } from "./api.js";
 import { preparePhoto, releasePhoto } from "./photo.js";
+import { createCamera } from "./camera.js";
 import { createPlanStore, makePlan, nextStepIndex } from "./plans.js";
 import { validDate } from "./task-utils.js";
 import { createVoiceControls } from "./voice.js";
@@ -62,6 +63,30 @@ const voice = createVoiceControls({
     inputChanged();
   },
 });
+const camera = createCamera({
+  video: $("camera-video"),
+  onStatus: (key) => status("camera-status", key),
+  onState: (state) => {
+    $("camera-panel").hidden = state === "off";
+    $("camera-start").disabled = state !== "off" || busy;
+    $("camera-take").disabled = state !== "active";
+    if (state === "active")
+      $("camera-panel").scrollIntoView({ block: "nearest" });
+  },
+  onCapture: async (file) => {
+    await choosePhoto(file);
+    $("extract-button").focus();
+  },
+});
+$("camera-start").onclick = () => {
+  voice.stopAll();
+  camera.start();
+};
+$("camera-take").onclick = () => camera.take();
+$("camera-cancel").onclick = () => camera.stop(true);
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) camera.stop();
+});
 function inputChanged(edited = true) {
   $("character-count").textContent =
     `${$("message").value.length.toLocaleString(getLocale())} / 4,000`;
@@ -77,10 +102,9 @@ function setBusy(value, kind) {
     "extract-retry",
     "retry",
     "photo-file",
-    "camera-file",
+    "camera-start",
     "photo-mode",
     "text-mode",
-    "fraud-mode",
     "ordinary-example",
     "suspicious-example",
     "language-hi",
@@ -102,11 +126,11 @@ function setBusy(value, kind) {
 function changeMode(next) {
   if (busy) return;
   voice.stopAll();
+  camera.stop();
   mode = next;
   $("photo-panel").hidden = next !== "photo";
   $("message-form").hidden = next === "photo" && !reviewRequired;
-  $("fraud-hint").hidden = next !== "fraud";
-  for (const name of ["photo", "text", "fraud"])
+  for (const name of ["photo", "text"])
     $(name + "-mode").setAttribute("aria-pressed", String(name === next));
 }
 function render() {
@@ -257,6 +281,7 @@ async function planMessage(clarification = "") {
     return;
   }
   voice.stopAll();
+  camera.stop();
   $("request-error").hidden = true;
   $("result").hidden = true;
   setBusy(true, "plan");
@@ -307,6 +332,7 @@ async function choosePhoto(file) {
 async function extract() {
   if (busy || !photo) return;
   voice.stopAll();
+  camera.stop();
   $("photo-error").hidden = true;
   setBusy(true, "photo");
   try {
@@ -345,11 +371,12 @@ $("retry").onclick = () => planMessage();
 $("extract-button").onclick = extract;
 $("extract-retry").onclick = extract;
 $("message").oninput = inputChanged;
-for (const name of ["photo", "text", "fraud"])
+for (const name of ["photo", "text"])
   $(name + "-mode").onclick = () => changeMode(name);
-for (const id of ["photo-file", "camera-file"])
+for (const id of ["photo-file"])
   $(id).onchange = (e) => {
-    choosePhoto(e.target.files[0]);
+    camera.stop();
+    if (e.target.files[0]) choosePhoto(e.target.files[0]);
     e.target.value = "";
   };
 $("discard-photo").onclick = () => {
@@ -370,7 +397,7 @@ const examples = {
 };
 for (const name of ["ordinary", "suspicious"])
   $(name + "-example").onclick = () => {
-    changeMode(name === "suspicious" ? "fraud" : "text");
+    changeMode("text");
     reviewRequired = false;
     $("review-control").hidden = true;
     $("review-note").hidden = true;
@@ -381,6 +408,7 @@ for (const name of ["ordinary", "suspicious"])
 for (const locale of ["hi", "en"])
   $("language-" + locale).onclick = () => {
     voice.stopAll();
+    camera.stop();
     store.preferences(locale, store.state.large);
     render();
   };
@@ -388,7 +416,10 @@ $("text-toggle").onclick = () => {
   store.preferences(getLocale(), !store.state.large);
   render();
 };
-$("voice-input").onclick = () => voice.startDictation();
+$("voice-input").onclick = () => {
+  camera.stop();
+  voice.startDictation();
+};
 $("voice-stop").onclick = () => voice.stopDictation();
 $("listen-plan").onclick = () => {
   if (activePlan)
@@ -404,10 +435,12 @@ $("listen-plan").onclick = () => {
 $("stop-reading").onclick = () => voice.stopReading();
 $("input-nav").onclick = () => {
   voice.stopAll();
+  camera.stop();
   $("input-title").focus();
 };
 $("day-nav").onclick = () => {
   voice.stopAll();
+  camera.stop();
   $("day-heading").focus();
 };
 $("manual-form").onsubmit = (e) => {
@@ -456,7 +489,10 @@ $("confirm-clear").onclick = () => {
   }
   render();
 };
-globalThis.addEventListener("pagehide", () => releasePhoto(photo));
+globalThis.addEventListener("pagehide", () => {
+  camera.stop();
+  releasePhoto(photo);
+});
 setInterval(() => {
   if (!document.hidden)
     renderDay({

@@ -19,6 +19,7 @@ const assets = [
   "task-utils.js",
   "api.js",
   "photo.js",
+  "camera.js",
   "voice.js",
   "plans.js",
   "render.js",
