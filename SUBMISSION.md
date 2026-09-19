@@ -7,7 +7,7 @@ Do not submit automatically. Deadline: 19 September 2026, 2:15 PM IST. Current m
 1. **Challenge:** AI For Senior Citizens
 2. **Public repository:** https://github.com/deevyanshoo/promptwars-main
 3. **Working deployed URL:** https://promptwars-main-589901835092.asia-south1.run.app
-4. **Publicly playable demo-video URL:** Pending recording and verified upload. Do not substitute a fabricated URL.
+4. **Publicly playable demo-video URL:** Pending corrected-release recording and YouTube unlisted upload. The earlier recording is superseded and must not be submitted.
 5. **Changes/updates description:**
 
 Daywell is a Hindi-first daily organizer for older adults. Capture a still with the video-only camera or upload a notice, explicitly request extraction, review and correct the words, then receive a plain-language plan with independent cautions. Follow one guided step at a time, choose dates, explicitly save, reload and resume. The real backend DAG runs explanation and safety review concurrently and waits for both. Substantial risk replaces candidate instructions with safe verification steps and removes preparation. The app includes English switching, larger text, optional browser speech, manual tasks, local due-date cues, honest retry states and validated browser-local storage. Photo and request limits, structured output validation and shared AI admission keep the workflow bounded. No external actions, emergency dispatch or automatic reminders are claimed.

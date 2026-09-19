@@ -87,6 +87,33 @@ $("camera-cancel").onclick = () => camera.stop(true);
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) camera.stop();
 });
+// Photo identity and draft identity must move together. Saved plans are untouched.
+function clearCurrentDraft() {
+  activePlan = null;
+  activeSource = null;
+  guideIndex = null;
+  execution = null;
+  $("result").hidden = true;
+  $("plan-overview").replaceChildren();
+  $("guide").replaceChildren();
+  $("execution-details").hidden = true;
+  $("execution-list").replaceChildren();
+  status("plan-status", null);
+}
+function invalidatePhotoReview() {
+  voice.stopAll();
+  clearCurrentDraft();
+  reviewRequired = false;
+  $("message").value = "";
+  $("review-confirm").checked = false;
+  $("review-control").hidden = true;
+  $("review-note").hidden = true;
+  $("uncertainties").replaceChildren();
+  status("readability", null);
+  $("request-error").hidden = true;
+  $("message-form").hidden = mode === "photo";
+  inputChanged(false);
+}
 function inputChanged(edited = true) {
   $("character-count").textContent =
     `${$("message").value.length.toLocaleString(getLocale())} / 4,000`;
@@ -259,12 +286,15 @@ function resume(id) {
   voice.stopAll();
   activePlan = store.state.plans.find((p) => p.id === id);
   activeSource = null;
-  guideIndex = Math.max(0, nextStepIndex(activePlan));
+  guideIndex = activePlan.steps.length
+    ? Math.max(0, nextStepIndex(activePlan))
+    : null;
   renderCurrent();
   $("result-heading").focus();
 }
 async function planMessage(clarification = "") {
   if (busy) return;
+  clearCurrentDraft();
   const message = $("message").value;
   if (!message.trim() || message.length > 4000) {
     error("request-error", "input_invalid");
@@ -283,7 +313,6 @@ async function planMessage(clarification = "") {
   voice.stopAll();
   camera.stop();
   $("request-error").hidden = true;
-  $("result").hidden = true;
   setBusy(true, "plan");
   try {
     const response = await requestWorkflow("/api/understand", {
@@ -308,6 +337,7 @@ async function planMessage(clarification = "") {
 }
 async function choosePhoto(file) {
   if (busy) return;
+  invalidatePhotoReview();
   const version = ++photoVersion;
   releasePhoto(photo);
   photo = null;
@@ -380,6 +410,7 @@ for (const id of ["photo-file"])
     e.target.value = "";
   };
 $("discard-photo").onclick = () => {
+  invalidatePhotoReview();
   photoVersion++;
   releasePhoto(photo);
   photo = null;
