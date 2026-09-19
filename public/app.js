@@ -160,6 +160,32 @@ function changeMode(next) {
   for (const name of ["photo", "text"])
     $(name + "-mode").setAttribute("aria-pressed", String(name === next));
 }
+function deleteSavedPlan(id) {
+  store.deletePlan(id);
+  if (activePlan?.id === id) clearCurrentDraft();
+  render();
+}
+function changeManualTask(id, done) {
+  store.setTasks(
+    store.state.tasks.map((task) =>
+      task.id === id ? { ...task, done } : task,
+    ),
+  );
+  render();
+}
+function deleteManualTask(id) {
+  store.setTasks(store.state.tasks.filter((task) => task.id !== id));
+  render();
+}
+function refreshDay() {
+  renderDay({
+    ...store.state,
+    onResume: resume,
+    onDelete: deleteSavedPlan,
+    onTaskChange: changeManualTask,
+    onTaskDelete: deleteManualTask,
+  });
+}
 function render() {
   const state = store.state;
   setLocale(state.locale);
@@ -175,32 +201,7 @@ function render() {
   storageWarning();
   renderCurrent();
   renderExecution(execution);
-  renderDay({
-    ...state,
-    onResume: resume,
-    onDelete: (id) => {
-      store.deletePlan(id);
-      if (activePlan?.id === id) {
-        activePlan = null;
-        activeSource = null;
-        guideIndex = null;
-        $("result").hidden = true;
-      }
-      render();
-    },
-    onTaskChange: (id, done) => {
-      store.setTasks(
-        store.state.tasks.map((task) =>
-          task.id === id ? { ...task, done } : task,
-        ),
-      );
-      render();
-    },
-    onTaskDelete: (id) => {
-      store.setTasks(store.state.tasks.filter((task) => task.id !== id));
-      render();
-    },
-  });
+  refreshDay();
   inputChanged(false);
 }
 function saved() {
@@ -525,24 +526,6 @@ globalThis.addEventListener("pagehide", () => {
   releasePhoto(photo);
 });
 setInterval(() => {
-  if (!document.hidden)
-    renderDay({
-      ...store.state,
-      onResume: resume,
-      onDelete: (id) => {
-        store.deletePlan(id);
-        render();
-      },
-      onTaskChange: (id, done) => {
-        store.setTasks(
-          store.state.tasks.map((v) => (v.id === id ? { ...v, done } : v)),
-        );
-        render();
-      },
-      onTaskDelete: (id) => {
-        store.setTasks(store.state.tasks.filter((v) => v.id !== id));
-        render();
-      },
-    });
+  if (!document.hidden) refreshDay();
 }, 60000);
 render();

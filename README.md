@@ -47,7 +47,7 @@ Admission is shared across endpoints: two active workflows, four concurrent prov
 
 ## GenAI and browser speech
 
-The only GenAI service used is **Google Gemini on Vertex AI**, configured model `gemini-3.8-flash`, global endpoint, `vertexai: true`, thinking level `LOW`, SDK **2.23.0**. Photo extraction makes one logical call. Planning makes two parallel logical calls. There is no separate translation call. Navigation, saving, completion and due-date cues are deterministic and make no model calls.
+The only runtime GenAI service is **Google Gemini on Vertex AI**, configured model `gemini-3.8-flash`, global endpoint, `vertexai: true`, thinking level `LOW`, SDK **2.23.0**. Photo extraction makes one logical call. Planning makes two parallel logical calls. There is no separate translation call. Navigation, saving, completion and due-date cues are deterministic and make no model calls.
 
 Browser SpeechRecognition and SpeechSynthesis are separate browser features, not Gemini audio understanding. Dictation uses `hi-IN` or `en-IN`, starts on a click, appends editable text and never submits automatically. The browser may use its own online service. Read aloud chooses a matching-language voice, loads `voiceschanged`, cancels previous playback and provides Stop. Missing voices and denied or unsupported microphone access retain a visual/typing fallback. Audio stops on competing actions, navigation, language changes and leaving the page. Actual main-build checks and limitations are in `VERIFICATION.md`; the prior warmup microphone success is not presented as a new main-build live speech test.
 
@@ -65,6 +65,22 @@ npm test
 ```
 
 Open http://localhost:8080. `PORT` is supported; the server binds `0.0.0.0`. `GET /health` reports `APP_COMMIT` without calling Gemini. No login or database is required.
+
+### Optional focused browser regressions
+
+These exercise real UI event handlers with mocked API responses. They are separate from the Node test count and real-provider smoke checks. Install verification tools outside the application repository. With Node.js 22, run these commands from the app folder in a POSIX shell:
+
+```sh
+DAYWELL_TEST_TOOLS="$(mktemp -d)"
+npm install --prefix "$DAYWELL_TEST_TOOLS" playwright@1.55.0
+"$DAYWELL_TEST_TOOLS/node_modules/.bin/playwright" install chromium
+PLAYWRIGHT_MODULE="$DAYWELL_TEST_TOOLS/node_modules/playwright/index.mjs" \
+APP_URL=http://localhost:8080 node test/release.browser.mjs
+```
+
+Start the app separately with `npm start`. The default uses Playwright's installed Chromium on the host OS. An optional `CHROME_PATH` selects an existing Chrome executable. The suite checks photo/draft invalidation, saved-plan preservation, failure followed by preference changes, zero-step resume and timer-refreshed daily controls. Browser recordings and local evidence paths in VERIFICATION.md are not required to run the app.
+
+Development assistance used OpenAI Codex. The application does not call OpenAI APIs. Synthetic notice fixtures were drawn programmatically. Browser speech, local system-voice demo narration, FFmpeg, Cloud Run and video hosting are not additional runtime GenAI services.
 
 ## Deploy
 

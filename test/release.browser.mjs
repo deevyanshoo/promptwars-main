@@ -5,9 +5,9 @@ const { chromium } = await import(
   process.env.PLAYWRIGHT_MODULE || "playwright"
 );
 const browser = await chromium.launch({
-  executablePath:
-    process.env.CHROME_PATH ||
-    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  ...(process.env.CHROME_PATH
+    ? { executablePath: process.env.CHROME_PATH }
+    : {}),
   headless: true,
   args: [
     "--use-fake-ui-for-media-stream",
@@ -16,6 +16,13 @@ const browser = await chromium.launch({
   ],
 });
 const context = await browser.newContext();
+await context.addInitScript(() => {
+  const schedule = window.setInterval.bind(window);
+  window.setInterval = (callback, delay, ...args) => {
+    if (delay === 60000) window.refreshDayTimer = callback;
+    return schedule(callback, delay, ...args);
+  };
+});
 const page = await context.newPage();
 const plan = {
   summary: "Plan A, for photo A only.",
@@ -68,13 +75,11 @@ const upload = async () => {
     c.getContext("2d").fillRect(0, 0, 100, 100);
     return c.toDataURL("image/png").split(",")[1];
   });
-  await page
-    .locator("#photo-file")
-    .setInputFiles({
-      name: "synthetic.png",
-      mimeType: "image/png",
-      buffer: Buffer.from(data, "base64"),
-    });
+  await page.locator("#photo-file").setInputFiles({
+    name: "synthetic.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(data, "base64"),
+  });
   await page.locator("#photo-preview").waitFor({ state: "visible" });
 };
 const prepareA = async () => {
@@ -191,6 +196,37 @@ try {
   assert.equal(await page.locator("#guide").isVisible(), false);
   assert.equal(await page.locator("#plan-overview").isVisible(), true);
   console.log("PASS: zero-step saved plan resumes in overview");
+  await page.evaluate(() => window.refreshDayTimer());
+  await page.getByRole("button", { name: "Delete plan", exact: true }).click();
+  assert.equal(await page.locator("#result").isVisible(), false);
+  await page.locator("#text-toggle").click();
+  assert.equal(await page.locator("#result").isVisible(), false);
+  assert.equal(
+    await page.evaluate(
+      () => JSON.parse(localStorage.getItem("daywell.main.v2")).plans.length,
+    ),
+    0,
+  );
+  await page.locator("#task-title").fill("Test manual task");
+  await page.locator("#manual-form button").click();
+  await page.evaluate(() => window.refreshDayTimer());
+  await page.locator("#task-list input[type=checkbox]").check();
+  assert.equal(
+    await page.evaluate(
+      () => JSON.parse(localStorage.getItem("daywell.main.v2")).tasks[0].done,
+    ),
+    true,
+  );
+  await page.locator("#task-list button").click();
+  assert.equal(
+    await page.evaluate(
+      () => JSON.parse(localStorage.getItem("daywell.main.v2")).tasks.length,
+    ),
+    0,
+  );
+  console.log(
+    "PASS: timer-refreshed controls use shared delete/complete handlers and clear an open deleted plan",
+  );
 } finally {
   await browser.close();
 }
